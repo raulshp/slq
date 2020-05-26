@@ -1,0 +1,270 @@
+CREATE TABLE contribuyentes(
+    id          NUMBER              CONSTRAINT contri_id_pk PRIMARY KEY,
+    documento   VARCHAR2(20)        CONSTRAINT contri_documento_uk UNIQUE,
+    nombre      VARCHAR2(15)        NOT NULL,
+    apellido    VARCHAR2(15)        NOT NULL,
+    email       VARCHAR2(50)        NOT NULL
+);
+
+CREATE TABLE Programas_Resguardos(
+    id          NUMBER              CONSTRAINT Prores_id_pk PRIMARY KEY,
+    Nit_Programa            VARCHAR2(20)        CONSTRAINT Prores_nombre_uk UNIQUE,
+    nombre_RazonSocial      VARCHAR2(15)        NOT NULL
+);
+CREATE TABLE Departamentos(
+    id          NUMBER          CONSTRAINT Depa_id_pk PRIMARY KEY,
+    Nombre   VARCHAR2(20)        CONSTRAINT Depa_nombre_uk UNIQUE
+);
+CREATE TABLE Municipio(
+    id          NUMBER           CONSTRAINT Muni_id_pk PRIMARY KEY,
+    nombre   VARCHAR2(20)        CONSTRAINT Muni_nombre_uk UNIQUE,
+    ID_Departamento       NUMBER,
+                        CONSTRAINT ID_Dep_FK7 FOREIGN KEY (ID_Departamento) REFERENCES Departamentos(id)
+);
+CREATE TABLE Resguardos(
+    id          NUMBER              CONSTRAINT Resg_id_pk PRIMARY KEY,
+    Nombre   VARCHAR2(20)        CONSTRAINT Resg_nombre_uk UNIQUE,
+    ID_Municipio        NUMBER,
+                        CONSTRAINT ID_Muni_FK6 FOREIGN KEY (ID_Municipio) REFERENCES Municipio(id)
+);
+
+
+CREATE TABLE Tipo_Pago(
+    id              NUMBER          CONSTRAINT Tpago_id_pk PRIMARY KEY,
+    Pago            VARCHAR2(3)     NOT NULL
+);
+CREATE TABLE Smart_Contract(
+    id                  NUMBER              CONSTRAINT Smart_id_pk PRIMARY KEY,
+    Fecha_Contrato      DATE,
+    Direccion_Pago      VARCHAR2(20)        CONSTRAINT Smart_Direccion_Pago_uk UNIQUE,
+    ID_Tipo_pago        NUMBER,
+                        CONSTRAINT ID_Smart_Contract_FK1 FOREIGN KEY (ID_Tipo_pago) REFERENCES Tipo_Pago(id)
+);
+
+CREATE TABLE Donaciones(
+    id               NUMBER                   CONSTRAINT Dona_id_pk PRIMARY KEY,
+    Valor_Donacion   NUMBER,
+    Fecha_Donacion   DATE,
+    ID_Smartc        NUMBER,
+    CONSTRAINT ID_Donaciones_FK2 FOREIGN KEY (ID_Smartc) REFERENCES Smart_Contract(id)
+);
+
+
+
+CREATE TABLE Donacion_Resguardos(
+    id                  NUMBER              CONSTRAINT DonaRes_id_pk PRIMARY KEY,
+    ID_Contribuyente    NUMBER,
+                        CONSTRAINT ID_Donacion_Res_FK3 FOREIGN KEY (ID_Contribuyente) REFERENCES contribuyentes(id),
+    ID_Donaciones       NUMBER,
+                        CONSTRAINT ID_Donacion_Res_FK4 FOREIGN KEY (ID_Donaciones) REFERENCES Donaciones(id),
+    ID_ProgramasRes     NUMBER,
+                        CONSTRAINT ID_Donacion_Res_FK5 FOREIGN KEY (ID_ProgramasRes) REFERENCES Programas_Resguardos(id)
+);
+
+DROP TABLE Donaciones;
+DROP TABLE Programas_Resguardos;
+DROP TABLE contribuyentes;
+DROP TABLE TIPO_PAGO;
+DROP TABLE SMART_CONTRACT;
+DROP TABLE Resguardos;
+DROP TABLE Municipio;
+DROP TABLE departamentos;
+DROP TABLE Donacion_Resguardos;
+
+
+-- Consultas Basicas
+SELECT * FROM contribuyentes;
+SELECT * FROM departamentos;
+SELECT nombre,documento FROM contribuyentes;
+SELECT DISTINCT Valor_Donacion FROM Donaciones;
+SELECT DISTINCT Fecha_Contrato FROM Smart_Contract;
+
+-- Cálculos aritméticos
+SELECT id,Fecha_Donacion,Valor_Donacion,Valor_Donacion*20 FROM Donaciones;
+SELECT id,Fecha_Donacion,Valor_Donacion,Valor_Donacion/10  "Porcentaje Para el Admin" FROM Donaciones;
+SELECT id,Fecha_Donacion,Valor_Donacion,Valor_Donacion-1.000 AS "donacion para programa resguardo" FROM Donaciones;
+SELECT id,Fecha_Donacion,Valor_Donacion,Valor_Donacion+500-Valor_Donacion FROM Donaciones;
+SELECT id,Fecha_Donacion,Valor_Donacion AS "LO QUE LLEGO",Valor_Donacion*Valor_Donacion AS "lo que se esperada" FROM Donaciones;
+
+-- ConcatenaciónSELECT nit_programa ||'-'|| nombre_razonsocial "ID/NAME" FROM Programas_Resguardos;
+SELECT nombre ||'-'|| id "Info Donate" FROM departamentos;
+SELECT nombre ||'-'|| apellido "Nombre completo" , Documento ||'-'|| email "Doc/Email" FROM contribuyentes;
+SELECT Fecha_Donacion ||'-'|| Valor_Donacion "Fecha y monto de donacion" FROM Donaciones;
+SELECT nit_programa ||'-'|| nombre_razonsocial "ID/NAME" FROM Programas_Resguardos;
+
+
+-- Operadores lógicos
+SELECT nombre,apellido,documento
+FROM contribuyentes
+WHERE id =20;
+--////
+SELECT *
+FROM municipio
+WHERE ID_Departamento <4 OR ID_Departamento =6 ;
+--////
+SELECT Nombre
+FROM Resguardos
+WHERE ID_Municipio =10;
+--////
+SELECT Valor_Donacion
+FROM Donaciones
+WHERE Valor_Donacion >=10000 AND ID_Smartc >0;
+--////
+SELECT Pago
+FROM Tipo_Pago
+WHERE id <3;
+
+--Between
+SELECT Valor_Donacion
+FROM Donaciones
+WHERE Valor_Donacion BETWEEN 10000 AND 20000;
+--////
+SELECT *
+FROM municipio
+WHERE ID_Departamento BETWEEN 10 AND 20;
+--////
+SELECT *
+FROM municipio
+WHERE ID_Departamento NOT BETWEEN 10 AND 20;
+--////
+SELECT Nombre, id
+FROM municipio
+WHERE ID_Departamento NOT BETWEEN 5 AND 21;
+
+
+--IN
+SELECT id,Nombre,ID_Municipio
+FROM Resguardos
+WHERE ID_Municipio IN (10,8,2,9);
+--////
+SELECT Valor_Donacion
+FROM Donaciones
+WHERE Valor_Donacion IN (10000,25000);
+--////
+SELECT ID,nombre,apellido,documento
+FROM contribuyentes
+WHERE id NOT IN (4,11,21,29);
+
+
+--LIKE
+SELECT id,nombre
+FROM contribuyentes
+WHERE nombre LIKE'A%';
+--////
+SELECT id,Nombre
+FROM Resguardos
+WHERE nombre LIKE'R%';
+--////
+SELECT id,nombre
+FROM municipio
+WHERE nombre LIKE'_ra%';
+--////
+SELECT id,apellido
+FROM contribuyentes
+WHERE apellido LIKE '_rteaga';
+--////
+SELECT id,apellido
+FROM contribuyentes
+WHERE apellido LIKE '%a';
+
+--Subconsultas
+SELECT Valor_Donacion, id
+FROM Donaciones
+WHERE Valor_Donacion > (SELECT Valor_donacion
+                        FROM Donaciones
+                        WHERE id=10 );
+ --////                       
+SELECT nombre, id
+FROM contribuyentes
+WHERE id < (SELECT Valor_donacion
+                        FROM Donaciones
+                        WHERE id=4 );
+--////
+SELECT nombre, id
+FROM municipio
+WHERE ID_Departamento > (SELECT id
+                        FROM municipio
+                        WHERE id=12 );
+
+--Ordenación
+SELECT DISTINCT valor_donacion FROM Donaciones ORDER BY valor_donacion;
+SELECT DISTINCT nombre FROM municipio ORDER BY nombre;
+SELECT * FROM contribuyentes ORDER BY id DESC;
+SELECT * FROM Donaciones ORDER BY valor_donacion,id DESC;
+SELECT * FROM Donaciones ORDER BY valor_donacion DESC,id ASC;
+
+--Funciones de caracteres
+SELECT UPPER(NOMBRE) FROM municipio;
+SELECT lOWER(PAGO) FROM tipo_pago;
+SELECT UPPER(email), lOWER(nombre) FROM contribuyentes;
+SELECT Length(nombre_RazonSocial) FROM programas_resguardos;
+SELECT SUBSTR(email,3,4) FROM contribuyentes;
+
+--Funciones numéricas
+SELECT id, valor_donacion,  ROUND(valor_donacion/12,2) FROM Donaciones;
+SELECT id, valor_donacion, TRUNC(valor_donacion*15,3) FROM Donaciones;
+SELECT id, valor_donacion, LOG(valor_donacion*14,7) FROM Donaciones;
+SELECT id, valor_donacion, POWER(valor_donacion,2) FROM Donaciones;
+SELECT id, valor_donacion, MOD(valor_donacion,id) FROM Donaciones;
+
+--Expresiones CASE
+SELECT id, pago,
+    CASE pago
+        WHEN 'BTC' THEN 'BITCOIN'
+        WHEN 'ETH' THEN 'ETHEREUM'
+        ELSE pago
+    END
+FROM tipo_pago;  
+
+SELECT id, nombre,
+    CASE nombre
+        WHEN 'Andres' THEN 'ANDRS'
+        WHEN 'Luis' THEN 'LS'
+        ELSE nombre
+    END
+FROM contribuyentes;    
+
+
+SELECT id, nombre,
+    CASE nombre
+        WHEN 'Villavicencio' THEN 'Vil/cio'
+        WHEN 'Mocoa' THEN 'MCO'
+        ELSE nombre
+    END
+FROM municipio;    
+
+--Agrupaciones
+SELECT nombre
+FROM contribuyentes
+GROUP BY nombre;
+
+SELECT Valor_Donacion, fecha_donacion, COUNT(id)
+FROM donaciones
+GROUP BY Valor_Donacion, fecha_donacion;
+
+SELECT direccion_pago ,fecha_contrato, COUNT(id)
+FROM smart_contract
+GROUP BY direccion_pago,fecha_contrato;
+
+--Condiciones HAVING
+SELECT Valor_Donacion, fecha_donacion, id_smartc, COUNT(id)
+FROM donaciones
+GROUP BY Valor_Donacion, fecha_donacion, id_smartc
+HAVING Valor_Donacion>10000
+ORDER BY Valor_Donacion, id_smartc, fecha_donacion;
+
+SELECT direccion_pago, fecha_contrato, id_tipo_pago AS "PAGOS EN ETH", COUNT(id)
+FROM smart_contract
+GROUP BY direccion_pago, fecha_contrato, id_tipo_pago
+HAVING id_tipo_pago>1
+ORDER BY direccion_pago, id_tipo_pago, fecha_contrato;
+
+
+SELECT nombre, id_departamento, COUNT(id)
+FROM municipio
+GROUP BY nombre, id_departamento
+HAVING nombre LIKE '%a'
+ORDER BY nombre, id_departamento;
+
+
+--JOINS
